@@ -45,7 +45,11 @@ func (g fakeGit) ListChangedFilesInDirs(commit string, dirs ...string) ([]string
 		"test_charts/foo/Chart.yaml",
 		"test_charts/bar/Chart.yaml",
 		"test_charts/bar/bar_sub/templates/bar_sub.yaml",
+		"test_charts/excluded/Chart.yaml",
 		"test_chart_at_root/templates/foo.yaml",
+		"test_chart_at_nested/foo/bar/Chart.yaml",
+		"test_chart_at_nested/foo/baz/Chart.yaml",
+		"test_chart_at_nested/foo/excluded/Chart.yaml",
 		"some_non_chart_dir/some_non_chart_file",
 		"some_non_chart_file",
 	}, nil
@@ -149,6 +153,23 @@ func TestComputeChangedChartDirectories(t *testing.T) {
 		assert.Contains(t, expected, chart)
 	}
 	assert.Len(t, actual, 3)
+	assert.Nil(t, err)
+}
+
+func TestComputeChangedChartDirectoriesWithNestedChart(t *testing.T) {
+	cfg := config.Configuration{
+		ExcludedCharts: []string{"excluded"},
+		ChartDirs:      []string{"test_chart_at_nested/foo"},
+	}
+	ct := newTestingMock(cfg)
+	// fmt.Println()
+	actual, err := ct.ComputeChangedChartDirectories()
+	// fmt.Printf("actual, %v", actual)
+	expected := []string{"test_chart_at_nested/foo/bar", "test_chart_at_nested/foo/baz"}
+	for _, chart := range actual {
+		assert.Contains(t, expected, chart)
+	}
+	assert.Len(t, actual, 2)
 	assert.Nil(t, err)
 }
 
